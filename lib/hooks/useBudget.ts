@@ -22,7 +22,7 @@ export function useBudget() {
     total_spent: 0,
     remaining: 0,
     percentage: 0,
-    exchange_rate: 3.70
+    exchange_rate: 0,
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -83,7 +83,7 @@ export function useBudget() {
     }
   }
 
-useEffect(() => {
+  useEffect(() => {
     let isMounted = true
 
     fetchBudget()
@@ -92,18 +92,18 @@ useEffect(() => {
 
     try {
       const channel = supabase.channel('budget-changes')
-      channel.on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
+      channel.on('postgres_changes', {
+        event: '*',
+        schema: 'public',
         table: 'budgets'
       }, () => {
         if (isMounted) fetchBudget()
       })
 
       const channel2 = supabase.channel('budget-expenses-changes')
-      channel2.on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
+      channel2.on('postgres_changes', {
+        event: '*',
+        schema: 'public',
         table: 'expenses'
       }, () => {
         if (isMounted) fetchBudget()
