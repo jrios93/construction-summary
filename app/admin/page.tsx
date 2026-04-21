@@ -6,6 +6,7 @@ import { AdminSidebar } from "./components/AdminSidebar"
 import { AdminBudgetSection } from "./components/AdminBudgetSection"
 import { AdminExpensesSection } from "./components/AdminExpensesSection"
 import { AdminNewsSection } from "./components/AdminNewsSection"
+import { AdminContractSection } from "./components/AdminContractSection"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { useState } from "react"
 import { useLanguage } from "@/components/providers/LanguageProvider"
@@ -19,6 +20,8 @@ function AdminPageContent({ activeSection }: { activeSection: string }) {
         return <AdminBudgetSection />
       case "expenses":
         return <AdminExpensesSection />
+      case "contracts":
+        return <AdminContractSection />
       case "news":
         return <AdminNewsSection />
       default:
@@ -32,6 +35,8 @@ function AdminPageContent({ activeSection }: { activeSection: string }) {
         return t.nav.budget
       case "expenses":
         return t.nav.expenses
+      case "contracts":
+        return t.nav.contracts
       case "news":
         return t.nav.news
       default:

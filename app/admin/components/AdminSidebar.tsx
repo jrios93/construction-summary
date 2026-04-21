@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { WalletIcon, ReceiptIcon, NewspaperIcon, Languages } from "lucide-react"
+import { WalletIcon, ReceiptIcon, NewspaperIcon, Languages, FileText } from "lucide-react"
 import { useLanguage } from "@/components/providers/LanguageProvider"
 
 interface AdminSidebarProps {
@@ -41,6 +41,12 @@ export function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarPro
       url: "#",
       icon: ReceiptIcon,
       section: "expenses",
+    },
+    {
+      title: t.nav.contracts,
+      url: "#",
+      icon: FileText,
+      section: "contracts",
     },
     {
       title: t.nav.news,

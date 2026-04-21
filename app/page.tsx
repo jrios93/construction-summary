@@ -5,7 +5,7 @@ import Header from "./components/Header"
 import { LanguageToggle } from "./components/LanguageToggle"
 import { NewSection } from "./components/NewSection"
 import { RegisterSpentSection } from "./components/RegisterSpentSection"
-
+import { ContractSection } from "./components/ContractSection"
 
 
 const Home = () => {
@@ -22,6 +22,7 @@ const Home = () => {
 
         <BudgetSection />
         <RegisterSpentSection />
+        <ContractSection />
         <NewSection />
       </div>
     </div>

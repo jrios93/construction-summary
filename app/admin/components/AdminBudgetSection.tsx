@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { useLanguage } from "@/components/providers/LanguageProvider"
 import { useBudget } from "@/lib/hooks/useBudget"
 import { useActivity } from "@/lib/hooks/useActivity"
+import { toast } from "sonner"
 
 export const AdminBudgetSection = () => {
   const { t, language } = useLanguage()
@@ -43,6 +44,7 @@ export const AdminBudgetSection = () => {
     setIsSaving(false)
 
     if (success) {
+      toast.success(language === "es" ? "Presupuesto actualizado" : "Budget updated")
       setIsEditing(false)
       setBudgetInput("")
     }
@@ -67,6 +69,7 @@ export const AdminBudgetSection = () => {
     setIsSaving(false)
 
     if (success) {
+      toast.success(language === "es" ? "Tipo de cambio actualizado" : "Exchange rate updated")
       setIsEditingExchange(false)
       setExchangeRateInput("")
     }

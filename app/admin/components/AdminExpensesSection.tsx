@@ -1,16 +1,17 @@
 "use client"
-
 import { useState, useRef } from "react"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Trash2, Pencil, Upload } from "lucide-react"
 import { useLanguage } from "@/components/providers/LanguageProvider"
 import { useExpenses } from "@/lib/hooks/useExpenses"
+import { toast } from "sonner"
 
 export const AdminExpensesSection = () => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { expenses, loading, total, addExpense, updateExpense, deleteExpense } = useExpenses()
   const [description, setDescription] = useState("")
   const [amount, setAmount] = useState("")
@@ -18,20 +19,28 @@ export const AdminExpensesSection = () => {
   const [file, setFile] = useState<File | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const formatCurrency = (value: number) => {
     return "S/ " + value.toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
+  const isFormValid = description.trim() && amount && date
+
   const handleAddExpense = async () => {
-    if (!description || !amount || !date) return
+    if (!isFormValid) {
+      toast.error(language === "es" ? "Completa todos los campos requeridos" : "Fill all required fields")
+      return
+    }
 
     setIsSaving(true)
     const result = await addExpense({ description, amount, date }, file || undefined)
     setIsSaving(false)
 
     if (result) {
+      toast.success(language === "es" ? "Gasto registrado" : "Expense registered")
       setDescription("")
       setAmount("")
       setDate("")
@@ -55,6 +64,7 @@ export const AdminExpensesSection = () => {
     setIsSaving(false)
 
     if (result) {
+      toast.success(language === "es" ? "Gasto actualizado" : "Expense updated")
       setEditingId(null)
       setDescription("")
       setAmount("")
@@ -72,7 +82,18 @@ export const AdminExpensesSection = () => {
   }
 
   const handleDelete = async (id: string) => {
-    await deleteExpense(id)
+    setItemToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return
+    const success = await deleteExpense(itemToDelete)
+    setDeleteDialogOpen(false)
+    setItemToDelete(null)
+    if (success) {
+      toast.success(language === "es" ? "Gasto eliminado" : "Expense deleted")
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,7 +188,7 @@ export const AdminExpensesSection = () => {
                 <Button onClick={handleCancel} variant="outline" className="flex-1 text-xl py-6 font-semibold">{t.common.cancel}</Button>
               </>
             ) : (
-              <Button onClick={handleAddExpense} disabled={isSaving} className="w-full text-xl py-6 font-semibold">
+              <Button onClick={handleAddExpense} disabled={isSaving || !isFormValid} className="w-full text-xl py-6 font-semibold">
                 {isSaving ? "..." : t.common.save}
               </Button>
             )}
@@ -233,6 +254,29 @@ export const AdminExpensesSection = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-card border-border text-foreground">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {language === "es" ? "¿Eliminar gasto?" : "Delete expense?"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {language === "es"
+                ? "Esta acción no se puede deshacer."
+                : "This action cannot be undone."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {language === "es" ? "Cancelar" : "Cancel"}
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              {language === "es" ? "Eliminar" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -4,9 +4,11 @@ import { useState, useRef } from "react"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Trash2, Pencil, Upload, Image as ImageIcon, X } from "lucide-react"
 import { useLanguage } from "@/components/providers/LanguageProvider"
 import { useNews } from "@/lib/hooks/useNews"
+import { toast } from "sonner"
 
 export const AdminNewsSection = () => {
   const { t, language } = useLanguage()
@@ -21,6 +23,8 @@ export const AdminNewsSection = () => {
   const [addingPhotosToId, setAddingPhotosToId] = useState<string | null>(null)
   const [newPhotos, setNewPhotos] = useState<File[]>([])
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<string[]>([])
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const addPhotosInputRef = useRef<HTMLInputElement>(null)
 
@@ -86,26 +90,36 @@ export const AdminNewsSection = () => {
     setEditingImages([])
   }
 
+  const isFormValid = content.trim().length > 0
+
   const handleSaveDraft = async () => {
-    if (!content) return
+    if (!isFormValid) {
+      toast.error(language === "es" ? "Escribe el contenido de la noticia" : "Write the news content")
+      return
+    }
 
     setIsSaving(true)
     const result = await addNews({ title, content, status: "draft" }, images)
     setIsSaving(false)
 
     if (result) {
+      toast.success(language === "es" ? "Borrador guardado" : "Draft saved")
       handleClear()
     }
   }
 
   const handlePublish = async () => {
-    if (!content) return
+    if (!isFormValid) {
+      toast.error(language === "es" ? "Escribe el contenido de la noticia" : "Write the news content")
+      return
+    }
 
     setIsSaving(true)
     const result = await addNews({ title, content, status: "published" }, images)
     setIsSaving(false)
 
     if (result) {
+      toast.success(language === "es" ? "Noticia publicada" : "News published")
       handleClear()
     }
   }
@@ -119,7 +133,23 @@ export const AdminNewsSection = () => {
   }
 
   const handleDelete = async (id: string) => {
-    await deleteNews(id)
+    setItemToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return
+    const success = await deleteNews(itemToDelete)
+    setDeleteDialogOpen(false)
+    setItemToDelete(null)
+    if (success) {
+      toast.success(language === "es" ? "Noticia eliminada" : "News deleted")
+    }
+  }
+
+  const openDeleteDialog = (id: string) => {
+    setItemToDelete(id)
+    setDeleteDialogOpen(true)
   }
 
   const handleEdit = (item: { id: string; title: string; content: string }) => {
@@ -129,13 +159,17 @@ export const AdminNewsSection = () => {
   }
 
   const handleUpdate = async () => {
-    if (!content || !editingId) return
+    if (!isFormValid || !editingId) {
+      toast.error(language === "es" ? "Escribe el contenido de la noticia" : "Write the news content")
+      return
+    }
 
     setIsSaving(true)
     const result = await updateNews({ id: editingId, title, content, status: "published" })
     setIsSaving(false)
 
     if (result) {
+      toast.success(language === "es" ? "Noticia actualizada" : "News updated")
       setEditingId(null)
       handleClear()
     }
@@ -264,17 +298,17 @@ export const AdminNewsSection = () => {
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             {editingId ? (
               <>
-                <Button onClick={handleUpdate} disabled={isSaving} className="flex-1 text-xl py-6 font-semibold">
+                <Button onClick={handleUpdate} disabled={isSaving || !isFormValid} className="flex-1 text-xl py-6 font-semibold">
                   {isSaving ? "..." : t.common.update}
                 </Button>
                 <Button onClick={handleCancelEdit} variant="outline" className="flex-1 text-xl py-6 font-semibold">{t.common.cancel}</Button>
               </>
             ) : (
               <>
-                <Button onClick={handleSaveDraft} disabled={isSaving} variant="outline" className="flex-1 text-xl py-6 font-semibold">
+                <Button onClick={handleSaveDraft} disabled={isSaving || !isFormValid} variant="outline" className="flex-1 text-xl py-6 font-semibold">
                   {isSaving ? "..." : t.common.saveDraft}
                 </Button>
-                <Button onClick={handlePublish} disabled={isSaving} className="flex-1 text-xl py-6 font-semibold">
+                <Button onClick={handlePublish} disabled={isSaving || !isFormValid} className="flex-1 text-xl py-6 font-semibold">
                   {isSaving ? "..." : t.common.publish}
                 </Button>
               </>
@@ -375,7 +409,7 @@ export const AdminNewsSection = () => {
                                   <Button variant="ghost" size="icon" onClick={() => togglePublish(item)} title={t.common.publish} className="text-green-500 hover:text-green-400">
                                     <Upload className="size-4" />
                                   </Button>
-                                  <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-red-400 hover:text-red-500">
+                                  <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(item.id)} className="text-red-400 hover:text-red-500">
                                     <Trash2 className="size-4" />
                                   </Button>
                                 </div>
@@ -413,7 +447,7 @@ export const AdminNewsSection = () => {
                                   <Button variant="ghost" size="icon" onClick={() => togglePublish(item)} title={t.common.saveDraft} className="text-muted-foreground hover:text-yellow-500">
                                     <Upload className="size-4 rotate-180" />
                                   </Button>
-                                  <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-muted-foreground hover:text-destructive">
+                                  <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(item.id)} className="text-muted-foreground hover:text-destructive">
                                     <Trash2 className="size-4" />
                                   </Button>
                                 </div>
@@ -429,6 +463,29 @@ export const AdminNewsSection = () => {
             </CardContent>
           </Card>
         )}
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-card border-border text-foreground">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {language === "es" ? "¿Eliminar noticia?" : "Delete news?"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {language === "es" 
+                ? "Esta acción no se puede deshacer." 
+                : "This action cannot be undone."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {language === "es" ? "Cancelar" : "Cancel"}
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              {language === "es" ? "Eliminar" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
