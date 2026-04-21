@@ -42,11 +42,12 @@ function AdminPageContent({ activeSection }: { activeSection: string }) {
   return (
     <SidebarInset>
       <div className="dark min-h-screen bg-background">
-        <div className="flex items-center justify-center w-full py-4">
-          <SidebarTrigger className="md:hidden !h-20 !w-20 [&>svg]:size-8" />
+        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+          <SidebarTrigger className="md:hidden !h-16 !w-16 [&>svg]:size-10 !p-4 text-foreground animate-pulse" />
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground px-10">{getTitle()}</h1>
+          <div className="w-16 md:hidden"></div>
         </div>
-        <div className="container mx-auto space-y-6 pb-10 px-4">
-          <h1 className="text-3xl font-bold text-foreground">{getTitle()}</h1>
+        <div className="container mx-auto space-y-6 pb-10 px-4 mt-10">
           {renderSection()}
         </div>
       </div>

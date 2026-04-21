@@ -6,13 +6,15 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/providers/LanguageProvider"
 import { useNews } from "@/lib/hooks/useNews"
-import { Download } from "lucide-react"
+import { Download, Loader2 } from "lucide-react"
 import { ImageGallery } from "./ImageGallery"
+import JSZip from "jszip"
 
 export const NewSection = () => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { news, loading } = useNews()
   const [currentPage, setCurrentPage] = useState(0)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const ITEMS_PER_PAGE = 3
 
   const formatDate = (dateStr: string | null | undefined) => {
@@ -47,14 +49,44 @@ export const NewSection = () => {
   const startIndex = currentPage * ITEMS_PER_PAGE
   const displayNews = publishedNews.slice(startIndex, startIndex + ITEMS_PER_PAGE)
 
-  const downloadAllImages = (images: { image_url: string }[]) => {
-    images.forEach((img, i) => {
-      const link = document.createElement('a')
-      link.href = img.image_url
-      link.download = `image-${i + 1}.jpg`
-      link.target = '_blank'
-      link.click()
-    })
+  const downloadAllImages = async (images: { image_url: string }[], newsId: string) => {
+    if (images.length === 0) return
+    
+    setDownloadingId(newsId)
+    
+    try {
+      if (images.length === 1) {
+        const link = document.createElement('a')
+        link.href = images[0].image_url
+        link.download = `foto-${newsId}.jpg`
+        link.target = '_blank'
+        link.click()
+      } else {
+        const zip = new JSZip()
+        const folder = zip.folder("fotos-obra")
+        
+        const fetchPromises = images.map(async (img, i) => {
+          const response = await fetch(img.image_url)
+          const blob = await response.blob()
+          const ext = blob.type.includes('png') ? 'png' : 'jpg'
+          folder?.file(`foto-${i + 1}.${ext}`, blob)
+        })
+        
+        await Promise.all(fetchPromises)
+        
+        const zipBlob = await zip.generateAsync({ type: "blob" })
+        const url = URL.createObjectURL(zipBlob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `fotos-obra-${newsId}.zip`
+        link.click()
+        URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error("Error downloading:", error)
+    } finally {
+      setDownloadingId(null)
+    }
   }
 
   return (
@@ -69,23 +101,28 @@ export const NewSection = () => {
       <div className="grid grid-cols-1  gap-4">
         {displayNews.map((item) => (
           <Card key={item.id} className="p-6">
-            <CardTitle className="text-base md:text-xl text-primary">{formatDate(item.published_at)}</CardTitle>
-            <CardContent className="space-y-4">
-              <p className="text-lg md:text-2xl leading-relaxed">{item.content}</p>
+            <CardTitle className="text-xl md:text-2xl text-primary mb-2">{formatDate(item.published_at)}</CardTitle>
+            <CardContent className="space-y-3">
+              {item.title && <p className="text-lg md:text-xl font-semibold text-foreground">{item.title}</p>}
+              <p className="text-lg md:text-xl leading-relaxed text-foreground">{item.content}</p>
               {item.images && item.images.length > 0 && (
                 <ImageGallery images={item.images} />
               )}
             </CardContent>
             {item.images && item.images.length > 0 && (
-              <CardFooter className="bg-card">
+              <CardFooter className="bg-card flex flex-col sm:flex-row gap-3">
                 <Button 
                   variant="default" 
-                  className="text-primary bg-accent/50 cursor-pointer text-lg font-medium py-6 px-4 rounded-lg hover:bg-accent transition-colors w-full sm:w-auto text-center" 
+                  className="text-primary bg-accent/50 cursor-pointer text-xl font-semibold py-6 px-6 rounded-lg hover:bg-accent transition-colors w-full sm:w-auto text-center disabled:opacity-50" 
                   aria-label="Descargar fotos"
-                  onClick={() => downloadAllImages(item.images)}
+                  onClick={() => downloadAllImages(item.images, item.id)}
+                  disabled={downloadingId === item.id}
                 >
-                  <Download className="mr-2 size-5" />
-                  {t.common.downloadPhotos}
+                  {downloadingId === item.id ? (
+                    <><Loader2 className="mr-2 size-6 animate-spin" /> {language === "es" ? "Descargando..." : "Downloading..."}</>
+                  ) : (
+                    <><Download className="mr-2 size-6" /> {t.common.downloadPhotos} ({item.images.length})</>
+                  )}
                 </Button>
               </CardFooter>
             )}

@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     console.log("POST /api/news - files:", files.length, files.map(f => ({ name: f.name, size: f.size })))
 
-    if (!title || !content) {
+    if (!content) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
@@ -122,7 +122,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const { id, title, content, status } = body
 
-    if (!id || !title || !content) {
+    if (!id || !content) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 

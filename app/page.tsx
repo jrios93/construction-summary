@@ -21,8 +21,8 @@ const Home = () => {
       <div className="container mx-auto space-y-6 mb-10">
 
         <BudgetSection />
-        <NewSection />
         <RegisterSpentSection />
+        <NewSection />
       </div>
     </div>
   )

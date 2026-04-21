@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Construction Summary",
+  title: "FIRST BAPTIST CHURCH OF HUANCAYO - Interior finishes of the temple and classrooms.",
   description: "Construction project management",
 };
 

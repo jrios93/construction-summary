@@ -1,4 +1,10 @@
 import { useState, useEffect } from "react"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 interface NewsImage {
   id: string
@@ -25,7 +31,6 @@ export function useNews() {
 
   const fetchNews = async () => {
     try {
-      setLoading(true)
       const res = await fetch("/api/news")
       const data = await res.json()
       if (data.error) {
@@ -67,20 +72,41 @@ export function useNews() {
     }
   }
 
-  const updateNews = async (newsData: { id: string; title: string; content: string; status: string }) => {
+  const updateNews = async (newsData: { id: string; title: string; content: string; status: string }, additionalImages?: File[]) => {
     try {
-      const res = await fetch("/api/news", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newsData)
-      })
-      const data = await res.json()
-      if (data.error) {
-        setError(data.error)
-        return null
+      if (additionalImages && additionalImages.length > 0) {
+        const formData = new FormData()
+        formData.append("id", newsData.id)
+        formData.append("title", newsData.title)
+        formData.append("content", newsData.content)
+        formData.append("status", newsData.status)
+        additionalImages.forEach(img => formData.append("images", img))
+
+        const res = await fetch("/api/news", {
+          method: "PUT",
+          body: formData
+        })
+        const data = await res.json()
+        if (data.error) {
+          setError(data.error)
+          return null
+        }
+        await fetchNews()
+        return data.news
+      } else {
+        const res = await fetch("/api/news", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newsData)
+        })
+        const data = await res.json()
+        if (data.error) {
+          setError(data.error)
+          return null
+        }
+        await fetchNews()
+        return data.news
       }
-      await fetchNews()
-      return data.news
     } catch (err) {
       setError("Failed to update news")
       return null
@@ -105,6 +131,24 @@ export function useNews() {
 
   useEffect(() => {
     fetchNews()
+
+    const channel = supabase.channel('news-changes')
+    channel.on('postgres_changes', { event: '*', schema: 'public', table: 'news' }, () => {
+      fetchNews()
+    })
+
+    const channel2 = supabase.channel('news-images-changes')
+    channel2.on('postgres_changes', { event: '*', schema: 'public', table: 'news_images' }, () => {
+      fetchNews()
+    })
+
+    channel.subscribe()
+    channel2.subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+      supabase.removeChannel(channel2)
+    }
   }, [])
 
   return { news, loading, error, addNews, updateNews, deleteNews, refetch: fetchNews }

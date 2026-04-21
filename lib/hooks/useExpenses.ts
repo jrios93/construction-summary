@@ -1,4 +1,10 @@
 import { useState, useEffect } from "react"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 interface Expense {
   id: string
@@ -18,7 +24,6 @@ export function useExpenses() {
 
   const fetchExpenses = async () => {
     try {
-      setLoading(true)
       const res = await fetch("/api/expenses")
       const data = await res.json()
       if (data.error) {
@@ -97,6 +102,17 @@ export function useExpenses() {
 
   useEffect(() => {
     fetchExpenses()
+
+    const channel = supabase.channel('expenses-changes')
+    channel.on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => {
+      fetchExpenses()
+    })
+
+    channel.subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   return { expenses, loading, error, total, addExpense, updateExpense, deleteExpense, refetch: fetchExpenses }

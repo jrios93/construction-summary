@@ -5,19 +5,30 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useLanguage } from "@/components/providers/LanguageProvider"
 import { useExpenses } from "@/lib/hooks/useExpenses"
-import { FileText } from "lucide-react"
+import { useBudget } from "@/lib/hooks/useBudget"
+import { FileText, Download } from "lucide-react"
 
 export const RegisterSpentSection = () => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { expenses, loading } = useExpenses()
+  const { budget } = useBudget()
   const [currentPage, setCurrentPage] = useState(0)
   const ITEMS_PER_PAGE = 3
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value)
+  const renderCurrency = (valueInPEN: number, usdClassName = "text-xl") => {
+    const exchangeRate = budget.exchange_rate || 3.70
+    const valueInUSD = valueInPEN / exchangeRate
+    const formattedPEN = "S/ " + valueInPEN.toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    const formattedUSD = "$ " + valueInUSD.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    return (
+      <>
+        {formattedPEN} <span className={`${usdClassName} opacity-70`}>({formattedUSD})</span>
+      </>
+    )
+  }
+
+  const formatCurrencySimple = (valueInPEN: number) => {
+    return "S/ " + valueInPEN.toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
   const formatDate = (dateStr: string) => {
@@ -64,33 +75,34 @@ export const RegisterSpentSection = () => {
         {displayExpenses.map((expense) => (
           <Card key={expense.id} className="p-6">
             <CardContent className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-              <div className="flex gap-6 items-center">
-                <Card className="w-20 h-20 flex items-center justify-center">
+              <div className="flex gap-4 items-center">
+                <Card className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center flex-shrink-0">
                   <CardContent className="flex flex-col items-center gap-1">
-                    <FileText className="size-8 text-muted-foreground" />
+                    <FileText className="size-8 md:size-10 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">PDF</span>
                   </CardContent>
                 </Card>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2 min-w-0">
                   <div>
-                    <p className="text-xl font-semibold">{expense.description}</p>
-                    <span className="text-lg text-muted-foreground">{formatDate(expense.date)}</span>
+                    <p className="text-xl md:text-2xl font-semibold text-foreground truncate">{expense.description}</p>
+                    <span className="text-lg md:text-xl text-muted-foreground">{formatDate(expense.date)}</span>
                   </div>
                 </div>
 
               </div>
-              <div className="flex gap-4 items-center">
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
                 <div>
-                  <p className="text-2xl font-bold text-destructive">-{formatCurrency(expense.amount)}</p>
+                  <p className="text-2xl md:text-3xl font-bold text-destructive">-{renderCurrency(expense.amount, "text-base")}</p>
                 </div>
 
                 {expense.file_url && (
                   <Button 
-                    className="text-primary text-xl bg-accent/50  font-medium py-6 px-5 rounded-lg hover:bg-accent transition-colors w-full sm:w-auto text-center" 
-                    aria-label="View receipt"
+                    className="text-primary text-xl bg-accent/50 font-semibold py-6 px-6 rounded-lg hover:bg-accent transition-colors w-full sm:w-auto text-center flex items-center gap-2" 
+                    aria-label={language === "es" ? "Ver comprobante" : "View receipt"}
                     onClick={() => window.open(expense.file_url, "_blank")}
                   >
-                    View receipt
+                    <FileText className="size-6" />
+                    {language === "es" ? "Ver comprobante" : "View receipt"}
                   </Button>
                 )}
               </div>

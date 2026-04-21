@@ -51,22 +51,22 @@ export function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarPro
   ]
 
   return (
-    <Sidebar className="dark">
+    <Sidebar className="dark w-72">
       <SidebarHeader>
-        <div className="flex flex-col items-center gap-4 py-4">
+        <div className="flex flex-col items-center gap-4 py-6">
           <Image
             src="/assets/images/logo2.png"
             alt="Logo"
-            width={120}
-            height={120}
+            width={100}
+            height={100}
             className="rounded-lg"
           />
           <button
             onClick={() => setLanguage(language === "es" ? "en" : "es")}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent/30 text-foreground hover:bg-sidebar-accent/50 transition-colors"
+            className="flex items-center gap-3 px-6 py-3 rounded-lg bg-sidebar-accent/40 text-lg font-semibold hover:bg-sidebar-accent/60 transition-colors min-h-[56px]"
           >
-            <Languages className="size-4" />
-            <span className="text-sm font-medium">{language.toUpperCase()}</span>
+            <Languages className="size-6 text-foreground" />
+            <span className="text-xl text-foreground">{language === "es" ? "ES" : "EN"}</span>
           </button>
         </div>
       </SidebarHeader>
@@ -78,11 +78,11 @@ export function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarPro
                 asChild
                 isActive={activeSection === item.section}
                 onClick={() => handleSectionClick(item.section)}
-                className="text-base py-3"
+                className="text-xl text-foreground"
               >
-                <button className="flex items-center gap-3 w-full">
-                  <item.icon className="size-5" />
-                  <span>{item.title}</span>
+                <button className="flex items-center gap-4 w-full py-5 px-4 min-h-[72px]">
+                  <item.icon className="size-7" />
+                  <span className="text-xl">{item.title}</span>
                 </button>
               </SidebarMenuButton>
             </SidebarMenuItem>

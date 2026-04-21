@@ -21,10 +21,7 @@ export const AdminExpensesSection = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value)
+    return "S/ " + value.toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
   const handleAddExpense = async () => {
@@ -109,66 +106,68 @@ export const AdminExpensesSection = () => {
         <CardTitle className="text-xl font-semibold text-foreground mb-4">
           {editingId ? t.expenses.editTitle : t.expenses.title}
         </CardTitle>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-foreground">{t.common.description}</Label>
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <Label htmlFor="description" className="text-xl font-semibold text-foreground">{t.common.description}</Label>
             <Input
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t.expenses.title + "..."}
-              className="text-foreground"
+              className="text-xl py-6 h-auto text-foreground"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount" className="text-foreground">{t.expenses.amount}</Label>
+            <div className="space-y-3">
+              <Label htmlFor="amount" className="text-xl font-semibold text-foreground">{t.expenses.amount}</Label>
               <Input
                 id="amount"
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="text-foreground"
+                className="text-2xl py-6 h-auto text-foreground"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="date" className="text-foreground">{t.common.date}</Label>
+            <div className="space-y-3">
+              <Label htmlFor="date" className="text-xl font-semibold text-foreground">{t.common.date}</Label>
               <Input
                 id="date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="text-foreground"
+                className="text-xl py-6 h-auto text-foreground"
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="file" className="text-foreground">{t.expenses.uploadFile}</Label>
-            <Input
-              id="file"
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*,.pdf"
-              className="text-foreground file:text-foreground"
-            />
+          <div className="space-y-3">
+            <Label htmlFor="file" className="text-xl font-semibold text-foreground">{t.expenses.uploadFile}</Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-4">
+              <Input
+                id="file"
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                className="text-lg text-foreground file:text-xl file:font-medium"
+              />
+            </div>
             {file && (
-              <span className="text-xs text-muted-foreground truncate block max-w-[200px]">
+              <span className="text-lg text-muted-foreground truncate block">
                 {file.name}
               </span>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             {editingId ? (
               <>
-                <Button onClick={handleUpdate} disabled={isSaving} className="flex-1">
+                <Button onClick={handleUpdate} disabled={isSaving} className="flex-1 text-xl py-6 font-semibold">
                   {isSaving ? "..." : t.common.update}
                 </Button>
-                <Button onClick={handleCancel} variant="outline" className="flex-1">{t.common.cancel}</Button>
+                <Button onClick={handleCancel} variant="outline" className="flex-1 text-xl py-6 font-semibold">{t.common.cancel}</Button>
               </>
             ) : (
-              <Button onClick={handleAddExpense} disabled={isSaving} className="w-full">
+              <Button onClick={handleAddExpense} disabled={isSaving} className="w-full text-xl py-6 font-semibold">
                 {isSaving ? "..." : t.common.save}
               </Button>
             )}

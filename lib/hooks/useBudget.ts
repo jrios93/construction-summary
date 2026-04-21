@@ -1,4 +1,10 @@
 import { useState, useEffect } from "react"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 interface Budget {
   id?: string
@@ -6,6 +12,8 @@ interface Budget {
   total_spent: number
   remaining: number
   percentage: number
+  exchange_rate: number
+  exchange_rate_source?: "api" | "manual"
 }
 
 export function useBudget() {
@@ -13,14 +21,14 @@ export function useBudget() {
     total_amount: 0,
     total_spent: 0,
     remaining: 0,
-    percentage: 0
+    percentage: 0,
+    exchange_rate: 3.70
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const fetchBudget = async () => {
     try {
-      setLoading(true)
       const res = await fetch("/api/budget")
       const data = await res.json()
       if (data.error) {
@@ -55,9 +63,64 @@ export function useBudget() {
     }
   }
 
-  useEffect(() => {
+  const updateExchangeRate = async (exchange_rate: number) => {
+    try {
+      const res = await fetch("/api/budget", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exchange_rate })
+      })
+      const data = await res.json()
+      if (data.error) {
+        setError(data.error)
+        return false
+      }
+      await fetchBudget()
+      return true
+    } catch (err) {
+      setError("Failed to update exchange rate")
+      return false
+    }
+  }
+
+useEffect(() => {
+    let isMounted = true
+
     fetchBudget()
+
+    if (!isMounted) return
+
+    try {
+      const channel = supabase.channel('budget-changes')
+      channel.on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'budgets'
+      }, () => {
+        if (isMounted) fetchBudget()
+      })
+
+      const channel2 = supabase.channel('budget-expenses-changes')
+      channel2.on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'expenses'
+      }, () => {
+        if (isMounted) fetchBudget()
+      })
+
+      channel.subscribe()
+      channel2.subscribe()
+
+      return () => {
+        isMounted = false
+        supabase.removeChannel(channel)
+        supabase.removeChannel(channel2)
+      }
+    } catch (e) {
+      console.log('Realtime error:', e)
+    }
   }, [])
 
-  return { budget, loading, error, updateBudget, refetch: fetchBudget }
+  return { budget, loading, error, updateBudget, updateExchangeRate, refetch: fetchBudget }
 }
