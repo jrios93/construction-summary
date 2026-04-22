@@ -51,9 +51,9 @@ export const NewSection = () => {
 
   const downloadAllImages = async (images: { image_url: string }[], newsId: string) => {
     if (images.length === 0) return
-    
+
     setDownloadingId(newsId)
-    
+
     try {
       if (images.length === 1) {
         const link = document.createElement('a')
@@ -64,16 +64,16 @@ export const NewSection = () => {
       } else {
         const zip = new JSZip()
         const folder = zip.folder("fotos-obra")
-        
+
         const fetchPromises = images.map(async (img, i) => {
           const response = await fetch(img.image_url)
           const blob = await response.blob()
           const ext = blob.type.includes('png') ? 'png' : 'jpg'
           folder?.file(`foto-${i + 1}.${ext}`, blob)
         })
-        
+
         await Promise.all(fetchPromises)
-        
+
         const zipBlob = await zip.generateAsync({ type: "blob" })
         const url = URL.createObjectURL(zipBlob)
         const link = document.createElement('a')
@@ -111,9 +111,9 @@ export const NewSection = () => {
             </CardContent>
             {item.images && item.images.length > 0 && (
               <CardFooter className="bg-card flex flex-col sm:flex-row gap-3">
-                <Button 
-                  variant="default" 
-                  className="text-primary bg-accent/50 cursor-pointer text-xl font-semibold py-6 px-6 rounded-lg hover:bg-accent transition-colors w-full sm:w-auto text-center disabled:opacity-50" 
+                <Button
+                  variant="default"
+                  className="text-primary bg-accent/50 cursor-pointer text-xl font-semibold py-6 px-6 rounded-lg hover:bg-accent-foreground hover:text-secondary transition-colors w-full sm:w-auto text-center disabled:opacity-50"
                   aria-label="Descargar fotos"
                   onClick={() => downloadAllImages(item.images, item.id)}
                   disabled={downloadingId === item.id}
@@ -131,7 +131,7 @@ export const NewSection = () => {
 
         {totalPages > 1 && (
           <div className="flex justify-center gap-4">
-            <Button 
+            <Button
               variant="outline"
               disabled={currentPage === 0}
               onClick={() => setCurrentPage(prev => prev - 1)}
@@ -142,7 +142,7 @@ export const NewSection = () => {
             <span className="flex items-center text-muted-foreground">
               {currentPage + 1} / {totalPages}
             </span>
-            <Button 
+            <Button
               variant="outline"
               disabled={currentPage >= totalPages - 1}
               onClick={() => setCurrentPage(prev => prev + 1)}

@@ -102,7 +102,7 @@ export const ContractSection = () => {
                   )}
                   <div className="flex flex-col gap-1 min-w-0 flex-1 w-full overflow-hidden">
                     <p className="text-xl md:text-2xl font-semibold text-foreground truncate w-full">
-                      {hasMultipleAttachments(doc) 
+                      {hasMultipleAttachments(doc)
                         ? (language === "es" ? "Documentos varios" : "Various documents")
                         : (doc.attachments?.[0]?.file_name || "")
                       }
@@ -137,7 +137,7 @@ export const ContractSection = () => {
                 </div>
               ) : (
                 <Button
-                  className="text-xl bg-accent/50 font-semibold py-6 px-6 rounded-lg hover:bg-accent transition-colors w-full sm:w-auto text-center flex items-center gap-2"
+                  className="text-xl bg-accent/50 font-semibold py-6 px-6 text-primary rounded-lg hover:bg-accent-foreground hover:text-secondary cursor-pointer transition-colors w-full sm:w-auto text-center flex items-center gap-2"
                   onClick={() => window.open(doc.attachments?.[0]?.file_url || "", "_blank")}
                 >
                   <ExternalLink className="size-6" />

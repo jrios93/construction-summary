@@ -72,15 +72,18 @@ export function useNews() {
     }
   }
 
-  const updateNews = async (newsData: { id: string; title: string; content: string; status: string }, additionalImages?: File[]) => {
+  const updateNews = async (newsData: { id: string; title: string; content: string; status: string }, additionalImages?: File[], imagesToDelete?: string[]) => {
     try {
-      if (additionalImages && additionalImages.length > 0) {
+      if ((additionalImages && additionalImages.length > 0) || (imagesToDelete && imagesToDelete.length > 0)) {
         const formData = new FormData()
         formData.append("id", newsData.id)
         formData.append("title", newsData.title)
         formData.append("content", newsData.content)
         formData.append("status", newsData.status)
-        additionalImages.forEach(img => formData.append("images", img))
+        if (imagesToDelete) {
+          imagesToDelete.forEach(url => formData.append("deleteImages", url))
+        }
+        additionalImages?.forEach(img => formData.append("images", img))
 
         const res = await fetch("/api/news", {
           method: "PUT",

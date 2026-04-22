@@ -119,33 +119,98 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { id, title, content, status } = body
+    const contentType = request.headers.get("content-type") || ""
+    
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData()
+      const id = formData.get("id") as string
+      const title = formData.get("title") as string
+      const content = formData.get("content") as string
+      const status = formData.get("status") as string
+      const deleteImages = formData.getAll("deleteImages") as string[]
+      const files = formData.getAll("images") as File[]
 
-    if (!id || !content) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      if (!id || !content) {
+        return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      }
+
+      const publishedAt = status === "published" ? new Date().toISOString() : null
+
+      const { data, error } = await supabase
+        .from("news")
+        .update({
+          title,
+          content,
+          status,
+          published_at: publishedAt,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", id)
+        .select()
+        .single()
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      if (deleteImages && deleteImages.length > 0) {
+        for (const imageUrl of deleteImages) {
+          const fileName = imageUrl.split("/").pop()
+          if (fileName) {
+            await supabase.storage.from("images").remove([fileName])
+          }
+          await supabase.from("news_images").delete().eq("image_url", imageUrl)
+        }
+      }
+
+      if (files && files.length > 0) {
+        for (const file of files) {
+          const fileName = `${Date.now()}-${file.name.replace(/\s/g, "_")}`
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from("images")
+            .upload(fileName, file)
+          
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from("images").getPublicUrl(fileName)
+            await supabase.from("news_images").insert({
+              news_id: id,
+              image_url: urlData.publicUrl,
+              image_name: file.name
+            })
+          }
+        }
+      }
+
+      return NextResponse.json({ news: data })
+    } else {
+      const body = await request.json()
+      const { id, title, content, status } = body
+
+      if (!id || !content) {
+        return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      }
+
+      const publishedAt = status === "published" ? new Date().toISOString() : null
+
+      const { data, error } = await supabase
+        .from("news")
+        .update({
+          title,
+          content,
+          status,
+          published_at: publishedAt,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", id)
+        .select()
+        .single()
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      return NextResponse.json({ news: data })
     }
-
-    const publishedAt = status === "published" ? new Date().toISOString() : null
-
-    const { data, error } = await supabase
-      .from("news")
-      .update({
-        title,
-        content,
-        status,
-        published_at: publishedAt,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", id)
-      .select()
-      .single()
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json({ news: data })
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }

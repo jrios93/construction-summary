@@ -11,7 +11,18 @@ const Header = () => {
       <p className="text-center text-lg md:text-2xl text-secondary-foreground font-sans font-semibold">
         {language === "es" ? "Acabados interiores del templo y aulas" : "Interior finishes of the temple and classrooms"}
       </p>
-    </div>
+
+      <div className="mt-4 pt-4 border-t border-border/50">
+        <p className="text-center text-lg md:text-xl font-serif italic text-primary/90">
+          <span className="text-2xl mr-2">"</span>
+          {language === "es" ? "A Él sea gloria en la iglesia..." : "Unto Him Be Glory in the Church..."}
+          < span className="text-2xl ml-2">"</span>
+        </p>
+        <p className="text-center text-sm md:text-base text-muted-foreground mt-1">
+          {language === "es" ? "Efesios 3:21" : "Eph. 3:21"}
+        </p>
+      </div>
+    </div >
   )
 }
 

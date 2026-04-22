@@ -20,6 +20,7 @@ export const AdminNewsSection = () => {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [editingImages, setEditingImages] = useState<string[]>([])
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([])
   const [addingPhotosToId, setAddingPhotosToId] = useState<string | null>(null)
   const [newPhotos, setNewPhotos] = useState<File[]>([])
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<string[]>([])
@@ -152,10 +153,22 @@ export const AdminNewsSection = () => {
     setDeleteDialogOpen(true)
   }
 
-  const handleEdit = (item: { id: string; title: string; content: string }) => {
+  const handleEdit = (item: { id: string; title: string; content: string; images?: { image_url: string; id: string }[] }) => {
     setEditingId(item.id)
     setTitle(item.title)
     setContent(item.content)
+    setImages([])
+    setPreviews([])
+    setEditingImages(item.images?.map(img => img.image_url) || [])
+    setImagesToDelete([])
+  }
+
+  const removeEditingImage = (index: number) => {
+    const imageToRemove = editingImages[index]
+    if (imageToRemove) {
+      setImagesToDelete([...imagesToDelete, imageToRemove])
+      setEditingImages(editingImages.filter((_, i) => i !== index))
+    }
   }
 
   const handleUpdate = async () => {
@@ -165,7 +178,7 @@ export const AdminNewsSection = () => {
     }
 
     setIsSaving(true)
-    const result = await updateNews({ id: editingId, title, content, status: "published" })
+    const result = await updateNews({ id: editingId, title, content, status: "published" }, images, imagesToDelete)
     setIsSaving(false)
 
     if (result) {
@@ -177,6 +190,8 @@ export const AdminNewsSection = () => {
 
   const handleCancelEdit = () => {
     setEditingId(null)
+    setEditingImages([])
+    setImagesToDelete([])
     handleClear()
   }
 
@@ -275,6 +290,46 @@ export const AdminNewsSection = () => {
                 <span className="text-sm">{t.news.takePhoto}</span>
               </label>
             </div>
+            {previews.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {previews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="w-20 h-20 object-cover rounded-lg border border-border"
+                    />
+                    <button
+                      onClick={() => removeImage(index)}
+                      className="absolute -top-2 -right-2 bg-destructive rounded-full p-1 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+)}
+            {editingId && editingImages.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                <p className="text-sm text-muted-foreground w-full">{language === "es" ? "Fotos actuales:" : "Current photos:"}</p>
+                {editingImages.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Current ${index + 1}`}
+                      className="w-20 h-20 object-cover rounded-lg border border-border"
+                    />
+                    <button
+                      onClick={() => removeEditingImage(index)}
+                      className="absolute -top-2 -right-2 bg-destructive rounded-full p-1 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      title={language === "es" ? "Eliminar" : "Delete"}
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             {previews.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {previews.map((preview, index) => (
