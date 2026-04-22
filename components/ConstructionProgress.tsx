@@ -6,7 +6,7 @@ import * as SliderPrimitive from "@radix-ui/react-slider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, Check } from "lucide-react"
+import { Plus, Trash2, Check, ChevronUp, ChevronDown, GripVertical } from "lucide-react"
 
 interface Milestone {
   id: string
@@ -30,7 +30,7 @@ const DEFAULT_MILESTONES: Milestone[] = [
 ]
 
 function ConstructionProgressPublic({
-  progress = 42,
+  progress = 0,
   milestones = DEFAULT_MILESTONES,
 }: Pick<ConstructionProgressProps, "progress" | "milestones">) {
   const [animatedProgress, setAnimatedProgress] = React.useState(0)
@@ -115,6 +115,53 @@ function ConstructionProgressAdmin({
   const handleUpdateMilestone = (id: string, updates: Partial<Milestone>) => {
     setMilestones((prev) => prev.map((m) => (m.id === id ? { ...m, ...updates } : m)))
   }
+  const handleMoveMilestone = (id: string, direction: "up" | "down") => {
+    setMilestones((prev) => {
+      const sorted = [...prev].sort((a, b) => a.threshold - b.threshold)
+      const index = sorted.findIndex((m) => m.id === id)
+      if (index === -1) return prev
+
+      let targetThreshold: number
+      if (direction === "up" && index > 0) {
+        targetThreshold = sorted[index - 1].threshold - 1
+      } else if (direction === "down" && index < sorted.length - 1) {
+        targetThreshold = sorted[index + 1].threshold + 1
+      } else {
+        return prev
+      }
+
+      targetThreshold = Math.max(0, Math.min(100, targetThreshold))
+
+      return prev.map((m) =>
+        m.id === id ? { ...m, threshold: targetThreshold } : m
+      )
+    })
+  }
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData("milestoneId", id)
+    e.dataTransfer.effectAllowed = "move"
+  }
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+  }
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault()
+    const draggedId = e.dataTransfer.getData("milestoneId")
+    if (draggedId === targetId) return
+
+    setMilestones((prev) => {
+      const updated = [...prev]
+      const draggedIndex = updated.findIndex((m) => m.id === draggedId)
+      const targetIndex = updated.findIndex((m) => m.id === targetId)
+      if (draggedIndex === -1 || targetIndex === -1) return prev
+
+      const [dragged] = updated.splice(draggedIndex, 1)
+      updated.splice(targetIndex, 0, dragged)
+
+      return updated.map((m, i) => ({ ...m, threshold: (i + 1) * Math.floor(100 / updated.length) }))
+    })
+  }
   const handleSave = () => onSave?.(localProgress, milestones)
 
   return (
@@ -154,8 +201,15 @@ function ConstructionProgressAdmin({
           <div className="space-y-3">
             <h4 className="text-xl font-bold">Hitos</h4>
             <div className="space-y-2">
-              {milestones.sort((a, b) => a.threshold - b.threshold).map((milestone) => (
-                <div key={milestone.id} className="flex items-center gap-2 p-3 border rounded-lg text-lg">
+              {[...milestones].sort((a, b) => a.threshold - b.threshold).map((milestone) => (
+                <div
+                  key={milestone.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, milestone.id)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, milestone.id)}
+                  className="flex items-center gap-2 p-3 border rounded-lg text-lg cursor-grab active:cursor-grabbing hover:bg-accent/20 transition-colors"
+                >
                   {editingId === milestone.id ? (
                     <>
                       <Input
@@ -176,11 +230,21 @@ function ConstructionProgressAdmin({
                       </Button>
                     </>
                   ) : (
-                    <>
-                      <div className="flex-1 flex items-center gap-2">
+                    <div className="flex w-full flex-col lg:flex-row lg:items-center lg:gap-2 gap-2">
+
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="size-5 text-muted-foreground" />
                         <div className={cn("w-3 h-3 rounded-full", localProgress >= milestone.threshold ? "bg-[var(--progress)]" : "bg-muted")} />
                         <span className="text-lg font-medium">{milestone.label}</span>
                         <span className="text-base text-muted-foreground">({milestone.threshold}%)</span>
+                      </div>
+                      <div className="flex gap-1 ml-auto">
+                        <Button size="icon-sm" variant="ghost" onClick={() => handleMoveMilestone(milestone.id, "up")} title="Subir">
+                          <ChevronUp className="size-10" />
+                        </Button>
+                        <Button size="icon-sm" variant="ghost" onClick={() => handleMoveMilestone(milestone.id, "down")} title="Bajar">
+                          <ChevronDown className="size-10" />
+                        </Button>
                       </div>
                       <Button variant="outline" onClick={() => setEditingId(milestone.id)} className="h-10 text-lg">
                         Editar
@@ -188,7 +252,7 @@ function ConstructionProgressAdmin({
                       <Button variant="destructive" onClick={() => handleDeleteMilestone(milestone.id)} className="h-10">
                         <Trash2 className="size-5" />
                       </Button>
-                    </>
+                    </div>
                   )}
                 </div>
               ))}
