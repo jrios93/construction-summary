@@ -74,7 +74,7 @@ export const RegisterSpentSection = () => {
 
         {displayExpenses.map((expense) => (
           <Card key={expense.id} className="p-6">
-            <CardContent className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+            <CardContent className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
               <div className="flex gap-4 items-center">
                 <Card className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center flex-shrink-0">
                   <CardContent className="flex flex-col items-center gap-1">
@@ -90,14 +90,14 @@ export const RegisterSpentSection = () => {
                 </div>
 
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+              <div className="flex flex-col md:flex-row md:justify-between w-full xl:w-auto  gap-3 items-stretch md:items-center">
                 <div>
                   <p className="text-2xl md:text-3xl font-bold text-destructive">-{renderCurrency(expense.amount, "text-base")}</p>
                 </div>
 
                 {expense.file_url && (
-                  <Button 
-                    className="text-primary text-xl bg-accent/50 font-semibold py-6 px-6 rounded-lg hover:bg-accent transition-colors w-full sm:w-auto text-center flex items-center gap-2" 
+                  <Button
+                    className="text-primary text-xl bg-accent/50 font-semibold py-6 px-6 rounded-lg hover:bg-accent transition-colors w-full sm:w-auto text-center flex items-center gap-2"
                     aria-label={language === "es" ? "Ver comprobante" : "View receipt"}
                     onClick={() => window.open(expense.file_url, "_blank")}
                   >
@@ -113,7 +113,7 @@ export const RegisterSpentSection = () => {
 
         {totalPages > 1 && (
           <div className="flex justify-center gap-4">
-            <Button 
+            <Button
               variant="outline"
               disabled={currentPage === 0}
               onClick={() => setCurrentPage(prev => prev - 1)}
@@ -124,7 +124,7 @@ export const RegisterSpentSection = () => {
             <span className="flex items-center text-muted-foreground">
               {currentPage + 1} / {totalPages}
             </span>
-            <Button 
+            <Button
               variant="outline"
               disabled={currentPage >= totalPages - 1}
               onClick={() => setCurrentPage(prev => prev + 1)}

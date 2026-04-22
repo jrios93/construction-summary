@@ -6,15 +6,18 @@ import { LanguageToggle } from "./components/LanguageToggle"
 import { NewSection } from "./components/NewSection"
 import { RegisterSpentSection } from "./components/RegisterSpentSection"
 import { ContractSection } from "./components/ContractSection"
+import { ConstructionProgress } from "@/components/ConstructionProgress"
 import { Button } from "@/components/ui/button"
 import { Camera } from "lucide-react"
 import { useBudget } from "@/lib/hooks/useBudget"
 import { useLanguage } from "@/components/providers/LanguageProvider"
+import { useProgress } from "@/lib/hooks/useProgress"
 
 
 const Home = () => {
-  const { language } = useLanguage()
+  const { language, t } = useLanguage()
   const { budget } = useBudget()
+  const { data: progressData, loading: progressLoading } = useProgress()
 
   return (
     <div className="bg-background min-h-screen ">
@@ -31,6 +34,18 @@ const Home = () => {
 
         <BudgetSection />
 
+        <div className="flex items-center gap-16">
+          <div className="w-fit">
+            <h2 className="text-3xl font-semibold text-nowrap">{t.home.progressTitle}</h2>
+          </div>
+          <div className="border border-neutral-300 w-full"></div>
+        </div>
+
+        <ConstructionProgress 
+          mode="public" 
+          progress={progressLoading ? 0 : (progressData?.progress ?? 0)} 
+          milestones={progressLoading ? undefined : (progressData?.milestones ?? undefined)} 
+        />
 
         <RegisterSpentSection />
         <ContractSection />

@@ -44,6 +44,7 @@ export const translations = {
       expenseAmount: "Importe",
       expenseDescription: "Descripción",
       expenseDate: "Fecha",
+      progressTitle: "Avance del Proyecto",
     },
     expenses: {
       title: "Registrar Gasto",
@@ -113,6 +114,7 @@ export const translations = {
       expenseAmount: "Amount",
       expenseDescription: "Description",
       expenseDate: "Date",
+      progressTitle: "Project Execution Progress",
     },
     expenses: {
       title: "Register Expense",
