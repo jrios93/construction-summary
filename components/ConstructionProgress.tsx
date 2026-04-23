@@ -19,6 +19,7 @@ interface ConstructionProgressProps {
   milestones?: Milestone[]
   onSave?: (progress: number, milestones: Milestone[]) => void
   mode?: "public" | "admin"
+  loading?: boolean
 }
 
 const DEFAULT_MILESTONES: Milestone[] = [
@@ -32,29 +33,102 @@ const DEFAULT_MILESTONES: Milestone[] = [
 function ConstructionProgressPublic({
   progress = 0,
   milestones = DEFAULT_MILESTONES,
-}: Pick<ConstructionProgressProps, "progress" | "milestones">) {
+  loading = false,
+}: Pick<ConstructionProgressProps, "progress" | "milestones" | "loading">) {
   const [animatedProgress, setAnimatedProgress] = React.useState(0)
 
   React.useEffect(() => {
+    if (loading) {
+      setAnimatedProgress(0)
+      return
+    }
     const timer = setTimeout(() => setAnimatedProgress(progress), 100)
     return () => clearTimeout(timer)
-  }, [progress])
+  }, [progress, loading])
+
+  const sortedMilestones = [...milestones].sort((a, b) => a.threshold - b.threshold)
 
   return (
     <Card className="w-full">
       <CardContent className="p-4 md:p-6 space-y-4">
         <div className="text-center">
-          <span className="text-6xl md:text-8xl font-bold text-[var(--progress)]">{animatedProgress}</span>
-          <span className="text-4xl md:text-5xl text-[var(--progress)]">%</span>
+          {loading ? (
+            <span className="text-6xl md:text-8xl font-bold text-muted animate-pulse">...</span>
+          ) : (
+            <>
+              <span className="text-6xl md:text-8xl font-bold text-[var(--progress)]">{animatedProgress}</span>
+              <span className="text-4xl md:text-5xl text-[var(--progress)]">%</span>
+            </>
+          )}
         </div>
 
-        <div className="space-y-3">
-          <div className="relative h-8 md:h-10 bg-muted rounded-full overflow-hidden">
+        {/* Mobile: Vertical Timeline Layout (de abajo hacia arriba) */}
+        <div className="md:hidden">
+          <div className="flex gap-4">
+            {/* Barra vertical */}
+            <div className="relative w-8 flex-shrink-0" style={{ height: `${sortedMilestones.length * 64}px` }}>
+              <div className="absolute inset-x-0 top-2 bottom-2 w-2 bg-muted rounded-full" />
+              <div
+                className="absolute inset-x-0 bottom-2 w-2 bg-[var(--progress)] rounded-full transition-all duration-1000 ease-out"
+                style={{ height: `${animatedProgress}%` }}
+              />
+            </div>
+
+            {/* Lista de hitos (de abajo hacia arriba usando flex-col-reverse) */}
+            <div className="flex-1 space-y-3 flex flex-col-reverse" style={{ minHeight: `${sortedMilestones.length * 64}px` }}>
+              {sortedMilestones.map((milestone) => {
+                const isActive = progress >= milestone.threshold
+
+                return (
+                  <div key={milestone.id} className="flex items-start gap-3">
+                    {/* Indicador circular */}
+                    <div className="relative z-10 flex-shrink-0">
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors",
+                        isActive
+                          ? "bg-[var(--progress)] text-background border-[var(--progress)]"
+                          : "bg-background text-muted-foreground border-muted"
+                      )}>
+                        {isActive ? (
+                          <Check className="w-5 h-5" />
+                        ) : (
+                          <span className="text-sm font-bold">{sortedMilestones.findIndex(m => m.id === milestone.id) + 1}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Info del hito */}
+                    <div className="flex-1 min-h-[2rem] flex items-center">
+                      <div className="space-y-0.5">
+                        <span className={cn(
+                          "text-lg font-semibold block",
+                          isActive ? "text-[var(--progress)]" : "text-muted-foreground"
+                        )}>
+                          {milestone.label}
+                        </span>
+                        <span className={cn(
+                          "text-base",
+                          isActive ? "text-[var(--progress)]" : "text-muted-foreground"
+                        )}>
+                          {milestone.threshold}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop: Horizontal Layout */}
+        <div className="hidden md:block space-y-3">
+          <div className="relative h-10 bg-muted rounded-full overflow-hidden">
             <div
               className="absolute inset-y-0 left-0 bg-[var(--progress)] rounded-full transition-all duration-1000 ease-out"
               style={{ width: `${animatedProgress}%` }}
             />
-            {[...milestones].sort((a, b) => a.threshold - b.threshold).map((milestone) => (
+            {sortedMilestones.map((milestone) => (
               <div
                 key={milestone.id}
                 className="absolute top-0 bottom-0 w-1 bg-background/50"
@@ -63,13 +137,21 @@ function ConstructionProgressPublic({
             ))}
           </div>
 
-          <div className="flex justify-between text-sm md:text-base">
-            {[...milestones].sort((a, b) => a.threshold - b.threshold).map((milestone) => {
+          <div className="flex justify-between">
+            {sortedMilestones.map((milestone) => {
               const isActive = progress >= milestone.threshold
               return (
-                <div key={milestone.id} className="flex flex-col items-center gap-1">
-                  <div className={cn("w-4 h-4 rounded-full", isActive ? "bg-[var(--progress)]" : "bg-muted")} />
-                  <span className={cn("text-center text-xs md:text-sm", isActive ? "text-[var(--progress)] font-bold" : "text-muted-foreground")}>
+                <div key={milestone.id} className="flex flex-col items-center gap-1 flex-1">
+                  <div className={cn(
+                    "w-5 h-5 rounded-full flex items-center justify-center",
+                    isActive ? "bg-[var(--progress)] text-background" : "bg-muted text-muted-foreground"
+                  )}>
+                    {isActive && <Check className="w-3 h-3" />}
+                  </div>
+                  <span className={cn(
+                    "text-center text-base font-medium",
+                    isActive ? "text-[var(--progress)]" : "text-muted-foreground"
+                  )}>
                     {milestone.label}
                   </span>
                 </div>

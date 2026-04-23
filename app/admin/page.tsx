@@ -41,8 +41,9 @@ function AdminPageContent({
         return (
           <ConstructionProgress 
             mode="admin" 
-            progress={progressLoading ? 42 : (progressData?.progress ?? 42)} 
-            milestones={progressLoading ? undefined : (progressData?.milestones ?? undefined)} 
+            progress={progressData?.progress ?? 0} 
+            milestones={progressData?.milestones ?? undefined} 
+            loading={progressLoading}
             onSave={handleSaveProgress} 
           />
         )
