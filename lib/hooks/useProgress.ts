@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { supabase } from "@/lib/supabase"
 
 interface Milestone {
   id: string
@@ -27,25 +26,14 @@ export function useProgress() {
   const fetchProgress = useCallback(async () => {
     try {
       setLoading(true)
+      const res = await fetch("/api/progress")
+      const result = await res.json()
 
-      const { data: progressData, error: progressError } = await supabase
-        .from("project_progress")
-        .select("*")
-        .limit(1)
-        .single()
-
-      if (progressError) throw progressError
-
-      const { data: milestonesData, error: milestonesError } = await supabase
-        .from("milestones")
-        .select("*")
-        .order("threshold", { ascending: true })
-
-      if (milestonesError) throw milestonesError
+      if (result.error) throw new Error(result.error)
 
       setData({
-        progress: progressData?.progress ?? 0,
-        milestones: milestonesData ?? [],
+        progress: result.progress ?? 0,
+        milestones: result.milestones ?? [],
       })
       setError(null)
     } catch (err) {
@@ -57,68 +45,18 @@ export function useProgress() {
 
   useEffect(() => {
     fetchProgress()
-
-    const channel = supabase.channel("progress-changes")
-
-    channel
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "project_progress" },
-        () => fetchProgress()
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "milestones" },
-        () => fetchProgress()
-      )
-      .subscribe((status) => {
-        console.log("Realtime status:", status)
-      })
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
   }, [fetchProgress])
 
   const saveProgress = useCallback(async (progress: number, milestones: SaveMilestone[]) => {
     try {
-      const { data: existing } = await supabase
-        .from("project_progress")
-        .select("id")
-        .limit(1)
-        .single()
+      const res = await fetch("/api/progress", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ progress, milestones })
+      })
+      const result = await res.json()
 
-      if (existing) {
-        await supabase
-          .from("project_progress")
-          .update({ progress })
-          .eq("id", existing.id)
-      } else {
-        await supabase
-          .from("project_progress")
-          .insert({ progress })
-      }
-
-      if (milestones.length > 0) {
-        await supabase.from("milestones").delete().neq("id", "00000000-0000-0000-0000-000000000000")
-
-        const { data: pData } = await supabase
-          .from("project_progress")
-          .select("id")
-          .limit(1)
-          .single()
-
-        if (pData) {
-          await supabase.from("milestones").insert(
-            milestones.map((m, i) => ({
-              project_progress_id: pData.id,
-              label: m.label,
-              threshold: m.threshold,
-              sort_order: i,
-            }))
-          )
-        }
-      }
+      if (result.error) throw new Error(result.error)
 
       await fetchProgress()
       return true

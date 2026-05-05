@@ -67,7 +67,7 @@ export function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarPro
       <SidebarHeader>
         <div className="flex flex-col items-center gap-4 py-6">
           <Image
-            src="/assets/images/logo2.png"
+            src="/assets/images/logo2.webp"
             alt="Logo"
             width={100}
             height={100}

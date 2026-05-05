@@ -8,7 +8,6 @@ import { useLanguage } from "@/components/providers/LanguageProvider"
 import { useNews } from "@/lib/hooks/useNews"
 import { Download, Loader2 } from "lucide-react"
 import { ImageGallery } from "./ImageGallery"
-import JSZip from "jszip"
 
 export const NewSection = () => {
   const { t, language } = useLanguage()
@@ -62,6 +61,7 @@ export const NewSection = () => {
         link.target = '_blank'
         link.click()
       } else {
+        const { default: JSZip } = await import('jszip')
         const zip = new JSZip()
         const folder = zip.folder("fotos-obra")
 

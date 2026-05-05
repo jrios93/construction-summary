@@ -1,15 +1,26 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 
+let cachedExchangeRate: { value: number; timestamp: number } | null = null
+const CACHE_DURATION = 3600000 // 1 hour
+
 async function fetchExchangeRateFromAPI(): Promise<number> {
+  const now = Date.now()
+
+  if (cachedExchangeRate && (now - cachedExchangeRate.timestamp) < CACHE_DURATION) {
+    return cachedExchangeRate.value
+  }
+
   try {
     const response = await fetch("https://api.frankfurter.app/latest?from=USD&to=PEN")
     if (!response.ok) throw new Error("Failed to fetch exchange rate")
     const data = await response.json()
-    return data.rates?.PEN || 3.70
+    const rate = data.rates?.PEN || 3.70
+    cachedExchangeRate = { value: rate, timestamp: now }
+    return rate
   } catch (error) {
     console.error("Error fetching exchange rate:", error)
-    return 3.70
+    return cachedExchangeRate?.value || 3.70
   }
 }
 

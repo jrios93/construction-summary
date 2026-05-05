@@ -56,7 +56,7 @@ export function AppSidebar({ activeSection, onSectionChange }: AppSidebarProps) 
       <SidebarHeader>
         <div className="flex justify-center py-4">
           <Image
-            src="/assets/images/logo2.png"
+            src="/assets/images/logo2.webp"
             alt="Logo"
             width={120}
             height={120}

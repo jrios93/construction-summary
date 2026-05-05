@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
       attachments.push(attachmentData)
     }
 
-    return NextResponse.json({ 
-      documents: [{ ...docData, attachments }] 
+    return NextResponse.json({
+      documents: [{ ...docData, attachments }]
     })
   } catch (error) {
     console.error("Error:", error)
@@ -113,7 +113,7 @@ export async function DELETE(request: NextRequest) {
         const urlParts = att.file_url.split("/")
         return urlParts[urlParts.length - 1]
       })
-      
+
       await supabase.storage
         .from("construction-files")
         .remove(fileNames)
