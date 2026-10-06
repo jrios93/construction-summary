@@ -91,9 +91,9 @@ export const NewSection = () => {
 
   return (
     <div className="space-y-4" >
-      <div className="flex items-center gap-16">
-        <div className="w-fit ">
-          <h2 className="text-3xl font-semibold text-nowrap ">{t.home.newsTitle}</h2>
+      <div className="flex items-center gap-4 sm:gap-16">
+        <div className="w-fit min-w-0">
+          <h2 className="text-2xl sm:text-3xl font-semibold">{t.home.newsTitle}</h2>
         </div>
         <div className="border border-neutral-300 w-full"></div>
       </div>

@@ -290,14 +290,14 @@ function ConstructionProgressAdmin({
                   onDragStart={(e) => handleDragStart(e, milestone.id)}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, milestone.id)}
-                  className="flex items-center gap-2 p-3 border rounded-lg text-lg cursor-grab active:cursor-grabbing hover:bg-accent/20 transition-colors"
+                  className="flex flex-wrap items-center gap-2 p-3 border rounded-lg text-lg cursor-grab active:cursor-grabbing hover:bg-accent/20 transition-colors"
                 >
                   {editingId === milestone.id ? (
                     <>
                       <Input
                         value={milestone.label}
                         onChange={(e) => handleUpdateMilestone(milestone.id, { label: e.target.value })}
-                        className="flex-1 h-10 text-lg"
+                        className="min-w-0 flex-1 h-10 text-lg"
                       />
                       <Input
                         type="number"
@@ -312,12 +312,12 @@ function ConstructionProgressAdmin({
                       </Button>
                     </>
                   ) : (
-                    <div className="flex w-full flex-col lg:flex-row lg:items-center lg:gap-2 gap-2">
+                    <div className="flex w-full flex-wrap items-center gap-2">
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
                         <GripVertical className="size-5 text-muted-foreground" />
                         <div className={cn("w-3 h-3 rounded-full", localProgress >= milestone.threshold ? "bg-[var(--progress)]" : "bg-muted")} />
-                        <span className="text-lg font-medium">{milestone.label}</span>
+                        <span className="min-w-0 break-words text-lg font-medium">{milestone.label}</span>
                         <span className="text-base text-muted-foreground">({milestone.threshold}%)</span>
                       </div>
                       <div className="flex gap-1 ml-auto">
@@ -339,7 +339,7 @@ function ConstructionProgressAdmin({
                 </div>
               ))}
             </div>
-            <div className="flex items-end gap-2 p-3 border rounded-lg">
+            <div className="flex flex-wrap items-end gap-2 p-3 border rounded-lg">
               <div className="flex-1 space-y-1">
                 <label className="text-base font-medium">Nuevo hito:</label>
                 <Input

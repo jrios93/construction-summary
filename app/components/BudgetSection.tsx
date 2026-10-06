@@ -42,31 +42,31 @@ export const BudgetSection = () => {
 
   return (
     <div className="space-y-4">
-      <Card className="w-full px-2 py-6 md:p-6 ">
+      <Card className="w-full p-4 md:p-6">
         <CardTitle className="flex justify-between" >
           <h1 className="text-xl md:text-2xl uppercase tracking-normal font-semibold text-left font-mono">{t.home.budgetTitle}</h1>
         </CardTitle>
         <CardContent className="flex flex-col  lg:flex-row justify-between items-center gap-x-12 space-y-4">
           <div className="flex-1 space-y-4 w-full">
-            <p className="text-4xl md:text-6xl lg:text-7xl text-foreground font-bold text-center font-sans leading-tight">
+            <p className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-foreground font-bold text-center font-sans leading-tight">
               {renderCurrency(budget.total_amount)}
             </p>
 
             <Field className="w-full space-y-2">
               <Progress value={budget.percentage} id="progress-upload" className="h-8" />
-              <FieldLabel htmlFor="progress-upload" className="flex justify-between gap-2">
-                <p className="text-xl text-card-foreground">
+              <FieldLabel htmlFor="progress-upload" className="flex flex-wrap justify-between gap-2">
+                <p className="min-w-0 text-base sm:text-xl text-card-foreground break-words">
                   <span className="font-semibold">{renderCurrency(budget.total_spent, "hidden")}</span> {t.home.spent}
                 </p>
                 <p className="hidden md:inline text-xl font-bold text-primary">{budget.percentage}%</p>
-                <p className="text-lg text-card-foreground">
+                <p className="min-w-0 text-base sm:text-lg text-card-foreground break-words">
                   <span className="font-semibold">{renderCurrency(budget.remaining, "hidden")}</span> {t.home.available}
                 </p>
               </FieldLabel>
             </Field>
           </div>
-          <div className="flex flex-row lg:flex-col w-full lg:w-[40%]  gap-4">
-            <Card className="w-1/2 md:w-full border-2 border-accent">
+          <div className="flex flex-col sm:flex-row lg:flex-col w-full lg:w-[40%] gap-3 sm:gap-4">
+            <Card className="w-full sm:w-1/2 lg:w-full border-2 border-accent">
               <CardContent className="space-y-1 py-4">
                 <p className="text-xl md:text-3xl font-bold text-center font-sans text-destructive">
                   {renderCurrency(budget.total_spent, "text-base")}
@@ -75,7 +75,7 @@ export const BudgetSection = () => {
               </CardContent>
             </Card>
 
-            <Card className="w-1/2 md:w-full border-2 border-ring ">
+            <Card className="w-full sm:w-1/2 lg:w-full border-2 border-ring">
               <CardContent className="space-y-1 py-4">
                 <p className="text-xl md:text-3xl font-bold text-center  font-sans text-ring">
                   {renderCurrency(budget.remaining, "text-base ")}

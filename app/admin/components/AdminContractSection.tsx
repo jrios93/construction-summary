@@ -118,7 +118,7 @@ export const AdminContractSection = () => {
   return (
     <div className="space-y-6">
       <Card className="p-4 md:p-6 border-border">
-        <CardTitle className="text-2xl font-semibold text-foreground mb-4">
+        <CardTitle className="text-xl sm:text-2xl font-semibold text-foreground mb-4 break-words">
           {titleText}
         </CardTitle>
         <CardContent className="space-y-6">
@@ -232,7 +232,7 @@ export const AdminContractSection = () => {
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
+                  <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-shrink-0">
                     {hasMultiple ? (
                       doc.attachments?.map((att) => (
                         <Button

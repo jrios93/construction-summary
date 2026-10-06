@@ -72,9 +72,9 @@ export const ContractSection = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-16">
-        <div className="w-fit">
-          <h2 className="text-3xl font-semibold text-nowrap">{titleText}</h2>
+      <div className="flex items-center gap-4 sm:gap-16">
+        <div className="w-fit min-w-0">
+          <h2 className="text-2xl sm:text-3xl font-semibold">{titleText}</h2>
         </div>
         <div className="border border-neutral-300 w-full"></div>
       </div>
@@ -118,8 +118,8 @@ export const ContractSection = () => {
               {hasMultipleAttachments(doc) ? (
                 <div className="flex flex-col gap-2 w-full">
                   {doc.attachments?.map((attachment, index) => (
-                    <div key={attachment.id} className="flex items-center justify-between p-3 rounded-lg bg-sidebar/50 border border-border">
-                      <div className="flex items-center gap-3 min-w-0">
+                    <div key={attachment.id} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg bg-sidebar/50 border border-border">
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
                         {getFileIcon(attachment.file_type)}
                         <span className="text-base text-foreground truncate">{attachment.file_name}</span>
                       </div>
