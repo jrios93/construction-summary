@@ -10,8 +10,9 @@ import { useLanguage } from "@/components/providers/LanguageProvider"
 import { useBudget } from "@/lib/hooks/useBudget"
 import { useActivity } from "@/lib/hooks/useActivity"
 import { toast } from "sonner"
+import { BudgetProvider } from "@/components/providers/BudgetProvider"
 
-export const AdminBudgetSection = () => {
+const AdminBudgetContent = () => {
   const { t, language } = useLanguage()
   const { budget, loading, updateBudget, updateExchangeRate } = useBudget()
   const { activities, loading: activitiesLoading } = useActivity()
@@ -219,7 +220,7 @@ export const AdminBudgetSection = () => {
                 <span className="text-base px-3 py-1 rounded bg-sidebar-accent/50 text-foreground">
                   {budget.exchange_rate_source === "manual"
                     ? (language === "es" ? "Manual" : "Manual")
-                    : (language === "es" ? "Automático (API)" : "Automatic (API)")}
+                    : (language === "es" ? "Predeterminado" : "Default")}
                 </span>
               </div>
               <Button onClick={handleEditExchangeRate} variant="outline" className="text-lg py-4 px-6 font-semibold" disabled={isEditingExchange}>
@@ -229,8 +230,8 @@ export const AdminBudgetSection = () => {
           )}
           <p className="text-xs text-muted-foreground mt-3">
             * {language === "es"
-              ? "Valor automático desde Frankfurter API. Puedes editarlo manualmente si necesitas un valor diferente."
-              : "Automatic value from Frankfurter API. You can edit manually if you need a different value."}
+              ? "Se usa tu tasa manual o el valor predeterminado de 3.70. Puedes editarla manualmente."
+              : "Uses your manual rate or the default value of 3.70. You can edit it manually."}
           </p>
         </CardContent>
       </Card>
@@ -275,3 +276,9 @@ export const AdminBudgetSection = () => {
     </div>
   )
 }
+
+export const AdminBudgetSection = () => (
+  <BudgetProvider>
+    <AdminBudgetContent />
+  </BudgetProvider>
+)

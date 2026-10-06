@@ -12,6 +12,7 @@ import { ProgressSection } from "./components/ProgressSection"
 import { Button } from "@/components/ui/button"
 import { Camera } from "lucide-react"
 import { useLanguage } from "@/components/providers/LanguageProvider"
+import { BudgetProvider } from "@/components/providers/BudgetProvider"
 
 function SectionSkeleton() {
   return <div className="p-6 bg-card rounded-lg animate-pulse h-40"></div>
@@ -21,6 +22,7 @@ const Home = () => {
   const { language, t } = useLanguage()
 
   return (
+    <BudgetProvider>
     <div className="bg-background min-h-screen ">
       <div className="flex flex-col items-center justify-center container mx-auto gap-2">
         <Header />
@@ -64,6 +66,7 @@ const Home = () => {
         </div>
       </div>
     </div>
+    </BudgetProvider>
   )
 }
 

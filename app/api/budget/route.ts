@@ -1,29 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 
-let cachedExchangeRate: { value: number; timestamp: number } | null = null
-const CACHE_DURATION = 3600000 // 1 hour
-
-async function fetchExchangeRateFromAPI(): Promise<number> {
-  const now = Date.now()
-
-  if (cachedExchangeRate && (now - cachedExchangeRate.timestamp) < CACHE_DURATION) {
-    return cachedExchangeRate.value
-  }
-
-  try {
-    const response = await fetch("https://api.frankfurter.app/latest?from=USD&to=PEN")
-    if (!response.ok) throw new Error("Failed to fetch exchange rate")
-    const data = await response.json()
-    const rate = data.rates?.PEN || 3.70
-    cachedExchangeRate = { value: rate, timestamp: now }
-    return rate
-  } catch (error) {
-    console.error("Error fetching exchange rate:", error)
-    return cachedExchangeRate?.value || 3.70
-  }
-}
-
 export async function GET() {
   try {
     console.log("Fetching budget from Supabase...")
@@ -41,9 +18,9 @@ export async function GET() {
 
     const budget = budgetsData && budgetsData.length > 0 ? budgetsData[0] : { total_amount: 0, exchange_rate: null }
     
-    const storedExchangeRate = budget.exchange_rate ? Number(budget.exchange_rate) : null
-    const apiExchangeRate = await fetchExchangeRateFromAPI()
-    const exchangeRate = storedExchangeRate || apiExchangeRate
+    const storedExchangeRate = Number(budget.exchange_rate)
+    const hasManualExchangeRate = Number.isFinite(storedExchangeRate) && storedExchangeRate > 0
+    const exchangeRate = hasManualExchangeRate ? storedExchangeRate : 3.70
 
     const { data: expensesData, error: expensesError } = await supabase
       .from("expenses")
@@ -68,7 +45,7 @@ export async function GET() {
           ? Math.round((totalSpent / budget.total_amount) * 100) 
           : 0,
         exchange_rate: exchangeRate,
-        exchange_rate_source: storedExchangeRate ? "manual" : "api"
+        exchange_rate_source: hasManualExchangeRate ? "manual" : "default"
       }
     })
   } catch (error) {

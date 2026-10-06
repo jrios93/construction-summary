@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { createContext, createElement, useContext, useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
 interface Budget {
@@ -8,10 +8,21 @@ interface Budget {
   remaining: number
   percentage: number
   exchange_rate: number
-  exchange_rate_source?: "api" | "manual"
+  exchange_rate_source?: "default" | "manual"
 }
 
-export function useBudget() {
+interface BudgetState {
+  budget: Budget
+  loading: boolean
+  error: string | null
+  updateBudget: (total_amount: number) => Promise<boolean>
+  updateExchangeRate: (exchange_rate: number) => Promise<boolean>
+  refetch: () => Promise<void>
+}
+
+const BudgetContext = createContext<BudgetState | null>(null)
+
+function useBudgetState(): BudgetState {
   const [budget, setBudget] = useState<Budget>({
     total_amount: 0,
     total_spent: 0,
@@ -80,42 +91,46 @@ export function useBudget() {
 
   useEffect(() => {
     let isMounted = true
+    void fetchBudget()
 
-    fetchBudget()
+    const channel = supabase.channel('budget-changes')
+    channel.on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'budgets'
+    }, () => {
+      if (isMounted) void fetchBudget()
+    })
 
-    if (!isMounted) return
+    const expenseChannel = supabase.channel('budget-expenses-changes')
+    expenseChannel.on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'expenses'
+    }, () => {
+      if (isMounted) void fetchBudget()
+    })
 
-    try {
-      const channel = supabase.channel('budget-changes')
-      channel.on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'budgets'
-      }, () => {
-        if (isMounted) fetchBudget()
-      })
+    channel.subscribe()
+    expenseChannel.subscribe()
 
-      const channel2 = supabase.channel('budget-expenses-changes')
-      channel2.on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'expenses'
-      }, () => {
-        if (isMounted) fetchBudget()
-      })
-
-      channel.subscribe()
-      channel2.subscribe()
-
-      return () => {
-        isMounted = false
-        supabase.removeChannel(channel)
-        supabase.removeChannel(channel2)
-      }
-    } catch (e) {
-      console.log('Realtime error:', e)
+    return () => {
+      isMounted = false
+      void supabase.removeChannel(channel)
+      void supabase.removeChannel(expenseChannel)
     }
   }, [])
 
   return { budget, loading, error, updateBudget, updateExchangeRate, refetch: fetchBudget }
+}
+
+export function BudgetProvider({ children }: { children: React.ReactNode }) {
+  const state = useBudgetState()
+  return createElement(BudgetContext.Provider, { value: state }, children)
+}
+
+export function useBudget() {
+  const state = useContext(BudgetContext)
+  if (!state) throw new Error("useBudget must be used within a BudgetProvider")
+  return state
 }
